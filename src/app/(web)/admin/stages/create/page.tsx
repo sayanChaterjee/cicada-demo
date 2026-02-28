@@ -16,28 +16,16 @@ export default function CreateStagePage() {
     question: "",
     answer: "",
     points: 10,
-    hint: [] as string[],
-    image: [] as string[],
+    hint: "",
+    image: "",
   });
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
-    if (name === "image") {
-      setFormData((prev) => ({
-        ...prev,
-        [name]: value.split(",").map((s) => s.trim()).filter(Boolean),
-      }));
-    } else if (name === "hint") {
-      setFormData((prev) => ({
-        ...prev,
-        [name]: value.split("|").map((s) => s.trim()).filter(Boolean),
-      }));
-    } else {
-      setFormData((prev) => ({
-        ...prev,
-        [name]: name === "stageId" || name === "points" ? Number(value) : value,
-      }));
-    }
+    setFormData((prev) => ({
+      ...prev,
+      [name]: name === "stageId" || name === "points" ? Number(value) : value,
+    }));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -45,10 +33,16 @@ export default function CreateStagePage() {
     setLoading(true);
 
     try {
+      const submitData = {
+        ...formData,
+        hint: formData.hint.split("|").map(s => s.trim()).filter(Boolean),
+        image: formData.image.split(",").map(s => s.trim()).filter(Boolean),
+      };
+
       const res = await fetch("/api/admin/stages", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(formData),
+        body: JSON.stringify(submitData),
       });
 
       const data = await res.json();
@@ -134,7 +128,7 @@ export default function CreateStagePage() {
             <input
               type="text"
               name="hint"
-              value={formData.hint.join(" | ")}
+              value={formData.hint}
               onChange={handleChange}
               placeholder="Clue 1 | Clue 2"
               className="w-full bg-black border border-zinc-700 rounded px-3 py-2 text-white focus:outline-none focus:border-green-500 transition"
@@ -148,16 +142,16 @@ export default function CreateStagePage() {
             <input
               type="text"
               name="image"
-              value={formData.image.join(", ")}
+              value={formData.image}
               onChange={handleChange}
               placeholder="e.g., https://res.cloudinary.com/.../image.png"
               className="w-full bg-black border border-zinc-700 rounded px-3 py-2 text-white focus:outline-none focus:border-green-500 transition"
             />
-            {formData.image.length > 0 && (
+            {formData.image.trim().length > 0 && (
               <div className="mt-4 p-4 border border-zinc-800 rounded bg-black">
                 <p className="text-xs text-zinc-500 mb-2">Image Previews:</p>
                 <div className="flex gap-4 flex-wrap">
-                  {formData.image.map((imgSrc, idx) => (
+                  {formData.image.split(",").map((s) => s.trim()).filter(Boolean).map((imgSrc, idx) => (
                     // eslint-disable-next-line @next/next/no-img-element
                     <img key={idx} src={imgSrc} alt={`Preview ${idx + 1}`} className="max-w-full h-auto max-h-48 object-contain rounded border border-zinc-800" />
                   ))}
