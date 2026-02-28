@@ -1,9 +1,11 @@
-import { NextResponse } from 'next/server';
+import { NextResponse } from "next/server";
 
-import TeamModel from '@/app/_model/team.model';
-import { StatusCode } from '@/app/_utils/types';
+import TeamModel from "@/app/_model/team.model";
+import { StatusCode } from "@/app/_utils/types";
 
-import databaseConnect from '../database';
+import databaseConnect from "../database";
+
+export const dynamic = "force-dynamic";
 
 interface IStage {
   stageId: string;
@@ -24,11 +26,11 @@ export async function GET() {
     const sortedTeams = await TeamModel.find()
       .sort({ totalPointScored: -1 })
       .select([
-        'totalPointScored',
-        'teamName',
-        'members.name',
-        'noOfStagesAttempted',
-        'stages',
+        "totalPointScored",
+        "teamName",
+        "members.name",
+        "noOfStagesAttempted",
+        "stages",
       ]);
     let filteredGroup: any[] = [];
     stages.map((st) => {
@@ -61,19 +63,19 @@ export async function GET() {
       },
       {
         status: StatusCode.OK,
-        statusText: 'OK',
-      }
+        statusText: "OK",
+      },
     );
   } catch (error) {
     return NextResponse.json(
       {
-        message: 'An error occurred while processing your request.',
+        message: "An error occurred while processing your request.",
         description: JSON.stringify(error),
       },
       {
         status: StatusCode.INTERNAL_SERVER_ERROR,
-        statusText: 'server error',
-      }
+        statusText: "server error",
+      },
     );
   }
 }
