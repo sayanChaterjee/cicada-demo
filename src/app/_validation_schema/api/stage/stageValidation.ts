@@ -7,7 +7,7 @@ export const CreateStageSchema = z.object({
   points: z.number().int().positive(),
   hint: z.string().optional(),
   stageId: z.number().int().positive(),
-  image: z.string(),
+  image: z.array(z.string()).optional(),
 });
 
 export const CheckAnswerSchema = z.object({

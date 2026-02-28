@@ -108,7 +108,10 @@ function Stage({ params }: { params: { id: string } }) {
               height={'300px'}
             />
           )}
-          <p className={styles.question}>{stage.question}</p>
+          <div
+            className={styles.question}
+            dangerouslySetInnerHTML={{ __html: stage.question }}
+          />
         </>
       )}
 

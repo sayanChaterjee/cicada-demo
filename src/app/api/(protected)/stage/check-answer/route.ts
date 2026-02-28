@@ -127,9 +127,9 @@ export async function POST(req: NextRequest) {
       await team.save();
     }
 
-    const gameDetails = await GameModel.findOne();
+    const gameDetails = await GameModel.findOne({ stages: stage._id });
     // this should never happen
-    if(!gameDetails) {
+    if (!gameDetails) {
       return NextResponse.json(
         {
           message: 'No game found',
