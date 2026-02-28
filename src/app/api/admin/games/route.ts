@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import databaseConnect from "@/app/api/database";
 import GameModel from "@/app/_model/game.model";
+import "@/app/_model/stage.model";
 
 export async function GET() {
     try {

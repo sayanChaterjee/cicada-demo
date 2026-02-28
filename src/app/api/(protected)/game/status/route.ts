@@ -51,39 +51,41 @@ export async function GET(req: NextRequest) {
       );
     }
 
-    let game;
+    let activeGames = await GameModel.find({
+      gameStartTime: { $lte: new Date() },
+      gameEndTime: { $gte: new Date() }
+    }).sort({ gameStartTime: -1 });
+
+    if (activeGames.length === 0) {
+      activeGames = await GameModel.find().sort({ gameStartTime: -1 }).limit(1);
+    }
+
+    let game = null;
     let nextStage = null;
     let finishedCurrentGame = false;
 
-    if (team.lastCompletedStage) {
-      // Find the game this team was playing
-      game = await GameModel.findOne({ stages: team.lastCompletedStage });
-      if (game) {
-        const currentStageIndex = game.stages.findIndex((_stage: any) => _stage.equals(team.lastCompletedStage));
-        if (currentStageIndex > -1 && currentStageIndex < game.stages.length - 1) {
-          nextStage = game.stages[currentStageIndex + 1];
-        } else if (currentStageIndex === game.stages.length - 1) {
-          finishedCurrentGame = true;
+    for (const g of activeGames) {
+      if (!g.stages || g.stages.length === 0) continue;
+
+      let maxCompletedIndex = -1;
+      for (let i = 0; i < g.stages.length; i++) {
+        const stageIdStr = g.stages[i].toString();
+        const isCompleted = team.stages.some((s: any) => s.stageId.toString() === stageIdStr);
+        if (isCompleted) {
+          maxCompletedIndex = i;
         }
       }
-    }
 
-    // If no game found from progression or team hasn't played, find an active or the latest one
-    if (!game) {
-      // Look for a currently running game
-      game = await GameModel.findOne({
-        gameStartTime: { $lte: new Date() },
-        gameEndTime: { $gte: new Date() }
-      }).sort({ gameStartTime: -1 });
-
-      if (!game) {
-        // Fallback to the latest game created
-        game = await GameModel.findOne().sort({ gameStartTime: -1 });
-      }
-
-      if (game && game.stages && game.stages.length > 0) {
-        // No last completed stage in this game, start at the beginning
-        nextStage = game.stages[0];
+      if (maxCompletedIndex < g.stages.length - 1) {
+        // Found an active game that the user hasn't finished yet
+        game = g;
+        nextStage = g.stages[maxCompletedIndex + 1];
+        finishedCurrentGame = false;
+        break;
+      } else {
+        // The user finished this game, remember it in case we don't find any unfinished games
+        game = g;
+        finishedCurrentGame = true;
       }
     }
 

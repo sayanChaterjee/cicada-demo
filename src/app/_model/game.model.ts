@@ -2,7 +2,7 @@ import mongoose, { model, Model, Schema, Types } from 'mongoose';
 
 interface IGame {
   totalPoints: number;
-  stages: [Types.ObjectId];
+  stages: Types.ObjectId[];
   gameStartTime: Date;
   gameEndTime: Date;
 }
