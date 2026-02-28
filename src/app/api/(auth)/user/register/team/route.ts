@@ -1,10 +1,10 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { v4 } from 'uuid';
+import { NextRequest, NextResponse } from "next/server";
+import { v4 } from "uuid";
 
-import TeamModel from '@/app/_model/team.model';
-import { StatusCode } from '@/app/_utils/types';
-import { CreateTeamSchema } from '@/app/_validation_schema/api/user/userValidation';
-import databaseConnect from '@/app/api/database';
+import TeamModel from "@/app/_model/team.model";
+import { StatusCode } from "@/app/_utils/types";
+import { CreateTeamSchema } from "@/app/_validation_schema/api/user/userValidation";
+import databaseConnect from "@/app/api/database";
 
 function generateUniqueString() {
   const generatedUUID = v4();
@@ -20,12 +20,12 @@ export async function POST(req: NextRequest) {
     if (!success) {
       return NextResponse.json(
         {
-          message: 'invalid data',
+          message: "invalid data",
         },
         {
           status: StatusCode.BAD_REQUEST,
-          statusText: 'invalid data',
-        }
+          statusText: "invalid data",
+        },
       );
     }
 
@@ -34,13 +34,13 @@ export async function POST(req: NextRequest) {
     if (teamExists) {
       return NextResponse.json(
         {
-          message: 'team name already exists',
+          message: "team name already exists",
           teamId: -1,
         },
         {
           status: StatusCode.BAD_REQUEST,
-          statusText: 'team name already exists',
-        }
+          statusText: "team name already exists",
+        },
       );
     }
 
@@ -49,30 +49,30 @@ export async function POST(req: NextRequest) {
       teamName: body.teamName,
       teamId: generatedTeamId,
       members: body.members,
-      totalTokens: 15,
+      totalTokens: 10,
     });
     await team.save();
 
     return NextResponse.json(
       {
-        message: 'team registered successfully',
+        message: "team registered successfully",
         teamId: generatedTeamId,
       },
       {
         status: StatusCode.CREATED,
-        statusText: 'registered',
-      }
+        statusText: "registered",
+      },
     );
   } catch (error) {
     return NextResponse.json(
       {
-        message: 'An error occurred while processing your request.',
+        message: "An error occurred while processing your request.",
         description: JSON.stringify(error),
       },
       {
         status: StatusCode.INTERNAL_SERVER_ERROR,
-        statusText: 'server error',
-      }
+        statusText: "server error",
+      },
     );
   }
 }
