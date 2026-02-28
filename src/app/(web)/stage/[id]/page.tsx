@@ -44,12 +44,17 @@ function Stage({ params }: { params: { id: string } }) {
 
       if (success && status === 200) {
         const formattedData = data as ResponseProps;
+        const rawHints = formattedData.stage.hint as any;
+        const sanitizedHints = Array.isArray(rawHints) 
+          ? rawHints.filter(h => typeof h === 'string' && h.trim() !== '') 
+          : (typeof rawHints === 'string' && rawHints.trim() !== '' ? [rawHints] : []);
+
         setStage({
           question: formattedData.stage.question,
           stageId: formattedData.stage.stageId,
           _id: formattedData.stage._id,
           image: formattedData.stage.image,
-          hint: formattedData.stage.hint,
+          hint: sanitizedHints,
         });
       } else if (status === StatusCode.UNAUTHORIZED) {
         toast('Unauthorized access', {
