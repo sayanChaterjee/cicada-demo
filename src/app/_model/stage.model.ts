@@ -4,7 +4,7 @@ interface IStage {
   question: string;
   answer: string | number;
   points: number;
-  hint: string;
+  hint: string[];
   stageId: number;
   image: string[];
 }
@@ -23,7 +23,8 @@ const stageSchema = new Schema<IStage>(
       required: true,
     },
     hint: {
-      type: String,
+      type: [String],
+      default: [],
     },
     image: {
       type: [String],

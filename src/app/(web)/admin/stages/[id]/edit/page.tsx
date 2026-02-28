@@ -19,7 +19,7 @@ export default function EditStagePage({ params }: { params: { id: string } }) {
     question: "",
     answer: "",
     points: 10,
-    hint: "",
+    hint: [] as string[],
     image: [] as string[],
   });
 
@@ -34,7 +34,7 @@ export default function EditStagePage({ params }: { params: { id: string } }) {
             question: data.data.question || "",
             answer: data.data.answer || "",
             points: data.data.points || 10,
-            hint: data.data.hint || "",
+            hint: Array.isArray(data.data.hint) ? data.data.hint : (data.data.hint ? [data.data.hint] : []),
             image: Array.isArray(data.data.image) ? data.data.image : (data.data.image ? [data.data.image] : []),
           });
         } else {
@@ -56,6 +56,11 @@ export default function EditStagePage({ params }: { params: { id: string } }) {
       setFormData((prev) => ({
         ...prev,
         [name]: value.split(",").map((s) => s.trim()).filter(Boolean),
+      }));
+    } else if (name === "hint") {
+      setFormData((prev) => ({
+        ...prev,
+        [name]: value.split("|").map((s) => s.trim()).filter(Boolean),
       }));
     } else {
       setFormData((prev) => ({
@@ -159,13 +164,13 @@ export default function EditStagePage({ params }: { params: { id: string } }) {
           </div>
 
           <div className="space-y-2">
-            <label className="text-sm font-medium text-zinc-300">Hint (Optional)</label>
+            <label className="text-sm font-medium text-zinc-300">Hints (Optional, separate by `|`)</label>
             <input
               type="text"
               name="hint"
-              value={formData.hint}
+              value={formData.hint.join(" | ")}
               onChange={handleChange}
-              placeholder="Clue to help solve"
+              placeholder="Clue 1 | Clue 2"
               className="w-full bg-black border border-zinc-700 rounded px-3 py-2 text-white focus:outline-none focus:border-green-500 transition"
             />
           </div>

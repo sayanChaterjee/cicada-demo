@@ -19,6 +19,7 @@ interface StageProps {
   stageId: number;
   _id: string;
   image: string;
+  hint?: string[];
 }
 interface ResponseProps {
   stage: StageProps;
@@ -28,6 +29,7 @@ function Stage({ params }: { params: { id: string } }) {
   const [answer, setAnswer] = useState('');
   const [stage, setStage] = useState<StageProps | null>(null);
   const [loading, setLoading] = useState(false);
+  const [visibleHints, setVisibleHints] = useState(0);
   const router = useRouter();
 
   useEffect(() => {
@@ -47,6 +49,7 @@ function Stage({ params }: { params: { id: string } }) {
           stageId: formattedData.stage.stageId,
           _id: formattedData.stage._id,
           image: formattedData.stage.image,
+          hint: formattedData.stage.hint,
         });
       } else if (status === StatusCode.UNAUTHORIZED) {
         toast('Unauthorized access', {
@@ -120,6 +123,23 @@ function Stage({ params }: { params: { id: string } }) {
             className={styles.question}
             dangerouslySetInnerHTML={{ __html: stage.question }}
           />
+          {stage.hint && stage.hint.length > 0 && (
+            <div className={`mt-6 space-y-3 ${styles.hintsContainer}`}>
+              {stage.hint.slice(0, visibleHints).map((h, i) => (
+                <div key={i} className="bg-zinc-800 p-3 rounded text-zinc-300 text-sm border border-zinc-700">
+                  <span className="font-bold text-green-500 mr-2">Hint {i + 1}:</span> {h}
+                </div>
+              ))}
+              {visibleHints < stage.hint.length && (
+                <button
+                  onClick={() => setVisibleHints((prev) => prev + 1)}
+                  className="bg-zinc-800 hover:bg-zinc-700 text-green-500 text-sm font-medium py-2 px-4 rounded border border-zinc-700 transition"
+                >
+                  Reveal Hint {visibleHints + 1}
+                </button>
+              )}
+            </div>
+          )}
         </>
       )}
 

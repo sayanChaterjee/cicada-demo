@@ -16,6 +16,7 @@ export async function GET(
       '_id',
       'stageId',
       'image',
+      'hint',
     ]);
     if (!stage) {
       return NextResponse.json(
