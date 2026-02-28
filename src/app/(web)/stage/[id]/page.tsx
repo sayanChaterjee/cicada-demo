@@ -100,7 +100,15 @@ function Stage({ params }: { params: { id: string } }) {
       ) : (
         <>
           <Heading variant="h2" children={`Question ${stage.stageId}`} />
-          {stage.image && stage.image !== '' && (
+          {stage.image && stage.image.length > 0 && Array.isArray(stage.image) && stage.image[0] !== '' && (
+            <img
+              src={stage.image[0]}
+              alt="question"
+              width={'300px'}
+              height={'300px'}
+            />
+          )}
+          {stage.image && typeof stage.image === 'string' && stage.image !== '' && (
             <img
               src={stage.image}
               alt="question"
