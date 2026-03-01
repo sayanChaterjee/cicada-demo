@@ -19,10 +19,14 @@ interface StageProps {
   stageId: number;
   _id: string;
   image: string;
-  hint?: string[];
+  hint: any;
+  prevStageId?: string | null;
+  nextStageId?: string | null;
 }
 interface ResponseProps {
   stage: StageProps;
+  prevStageId: string | null;
+  nextStageId: string | null;
 }
 
 function Stage({ params }: { params: { id: string } }) {
@@ -57,6 +61,8 @@ function Stage({ params }: { params: { id: string } }) {
           _id: formattedData.stage._id,
           image: formattedData.stage.image,
           hint: sanitizedHints,
+          prevStageId: formattedData.prevStageId,
+          nextStageId: formattedData.nextStageId,
         });
       } else if (status === StatusCode.UNAUTHORIZED) {
         toast("Unauthorized access", {
@@ -137,7 +143,7 @@ function Stage({ params }: { params: { id: string } }) {
           />
           {stage.hint && stage.hint.length > 0 && (
             <div className={`mt-6 space-y-3 ${styles.hintsContainer}`}>
-              {stage.hint.slice(0, visibleHints).map((h, i) => (
+              {stage.hint.slice(0, visibleHints).map((h: string, i: number) => (
                 <div
                   key={i}
                   className="bg-zinc-800 p-3 rounded text-zinc-300 text-sm border border-zinc-700"
@@ -161,12 +167,36 @@ function Stage({ params }: { params: { id: string } }) {
         </>
       )}
 
-      <div className={styles.footer}>
+      <div
+        className={styles.footer}
+        style={{
+          display: "flex",
+          flexDirection: "row",
+          gap: "1rem",
+          alignItems: "stretch",
+          justifyContent: "center",
+          width: "100%",
+          padding: "1rem",
+        }}
+      >
+        <div style={{ flex: "0 0 150px", display: "flex" }}>
+          <HoverButton
+            disabled={!stage?.prevStageId}
+            onClick={() => {
+              if (stage?.prevStageId)
+                router.push(`/stage/${stage?.prevStageId}`);
+            }}
+          >
+            Previous
+          </HoverButton>
+        </div>
+
         <input
           value={answer}
           type="text"
           placeholder="Type your answer here..."
           className={styles.input}
+          style={{ flex: 1 }}
           autoCapitalize="off"
           autoCorrect="off"
           spellCheck="false"
@@ -174,102 +204,117 @@ function Stage({ params }: { params: { id: string } }) {
           required
           onChange={(e) => setAnswer(e.target.value)}
         />
-        <HoverButton
-          disabled={answer === "" || !stage}
-          onClick={async () => {
-            if (stage) {
-              // checking game status
 
-              const { gameStatus } = await getGameStatus();
-              if (
-                gameStatus === -1 ||
-                gameStatus === GameStatus.NOT_STARTED ||
-                gameStatus === GameStatus.ENDED
-              ) {
-                toast("Game is not active", {
-                  type: "warning",
-                });
-                router.push("/instructions");
-                return;
-              }
+        <div style={{ flex: "0 0 150px", display: "flex" }}>
+          <HoverButton
+            disabled={answer === "" || !stage}
+            onClick={async () => {
+              if (stage) {
+                // checking game status
 
-              // submitting answer
-              const { success, message, status, data } = await submitAnswer(
-                answer,
-                stage._id,
-              );
-
-              if (
-                success &&
-                status === StatusCode.OK &&
-                data &&
-                "nextStageId" in data
-              ) {
-                toast("Correct answer !", {
-                  type: "success",
-                  autoClose: 2000,
-                });
-
-                // if the current stage was the last stage then redirect to results page
-                if (data.nextStageId === -1) {
-                  router.push("/results");
-                } else {
-                  // if the next stage exists then redirect to the next stage
-                  router.push(
-                    `/stage/${data ? data.nextStageId : stage.stageId + 1}`,
-                  );
+                const { gameStatus } = await getGameStatus();
+                if (
+                  gameStatus === -1 ||
+                  gameStatus === GameStatus.NOT_STARTED ||
+                  gameStatus === GameStatus.ENDED
+                ) {
+                  toast("Game is not active", {
+                    type: "warning",
+                  });
+                  router.push("/instructions");
+                  return;
                 }
-              } else if (status === StatusCode.UNAUTHORIZED) {
-                toast("Unauthorized access", {
-                  type: "error",
-                  autoClose: 2000,
-                });
-                router.push("/auth/login");
-              } else if (status === StatusCode.BAD_REQUEST) {
-                // only triggers when wrong answer
-                if (data) {
-                  // if there is tokens left meaning game = false (game over for player)
-                  if (data.totalTokens <= 0) {
-                    router.push("/instructions");
+
+                // submitting answer
+                const { success, message, status, data } = await submitAnswer(
+                  answer,
+                  stage._id,
+                );
+
+                if (
+                  success &&
+                  status === StatusCode.OK &&
+                  data &&
+                  "nextStageId" in data
+                ) {
+                  toast("Correct answer !", {
+                    type: "success",
+                    autoClose: 2000,
+                  });
+
+                  // if the current stage was the last stage then redirect to results page
+                  if (data.nextStageId === -1) {
+                    router.push("/results");
+                  } else {
+                    // if the next stage exists then redirect to the next stage
+                    router.push(
+                      `/stage/${data ? data.nextStageId : stage.stageId + 1}`,
+                    );
                   }
+                } else if (status === StatusCode.UNAUTHORIZED) {
+                  toast("Unauthorized access", {
+                    type: "error",
+                    autoClose: 2000,
+                  });
+                  router.push("/auth/login");
+                } else if (status === StatusCode.BAD_REQUEST) {
+                  // only triggers when wrong answer
+                  if (data) {
+                    // if there is tokens left meaning game = false (game over for player)
+                    if (data.totalTokens <= 0) {
+                      router.push("/instructions");
+                    }
 
-                  // if there is tokens left meaning game = true
-                  // then player can continue playing, instead of redirecting to home ( not game over for player)
+                    // if there is tokens left meaning game = true
+                    // then player can continue playing, instead of redirecting to home ( not game over for player)
 
-                  toast(
-                    <div>
-                      <p>{data.message}</p>
-                      {data.totalTokens > 0 ? (
-                        <p>Tokens left: {data.totalTokens}</p>
-                      ) : (
-                        <p>No tokens left</p>
-                      )}
-                    </div>,
-                    {
+                    toast(
+                      <div>
+                        <p>{data.message}</p>
+                        {data.totalTokens > 0 ? (
+                          <p>Tokens left: {data.totalTokens}</p>
+                        ) : (
+                          <p>No tokens left</p>
+                        )}
+                      </div>,
+                      {
+                        type: "error",
+                        autoClose: 2000,
+                      },
+                    );
+                  }
+                  // handles other bad request cases
+                  else {
+                    toast(message, {
                       type: "error",
                       autoClose: 2000,
-                    },
-                  );
-                }
-                // handles other bad request cases
-                else {
+                    });
+                  }
+                } else {
+                  // handles other status codes accept the above three
                   toast(message, {
                     type: "error",
                     autoClose: 2000,
                   });
                 }
-              } else {
-                // handles other status codes accept the above three
-                toast(message, {
-                  type: "error",
-                  autoClose: 2000,
-                });
               }
-            }
-          }}
-        >
-          Next
-        </HoverButton>
+            }}
+          >
+            Submit Answer
+          </HoverButton>
+        </div>
+
+        <div style={{ flex: "0 0 150px", display: "flex" }}>
+          <HoverButton
+            disabled={!stage?.nextStageId}
+            onClick={() => {
+              if (stage?.nextStageId)
+                router.push(`/stage/${stage?.nextStageId}`);
+            }}
+          >
+            Next Stage
+          </HoverButton>
+        </div>
       </div>
     </section>
   );
